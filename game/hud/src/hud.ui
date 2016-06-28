@@ -1,0 +1,6 @@
+{
+  "name": "hud",
+  "mainFile": "index.html",
+  "handlesInput": true,
+  "layer": 1
+}
