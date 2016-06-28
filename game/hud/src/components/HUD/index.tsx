@@ -8,7 +8,7 @@ import * as React from 'react';
 import {connect} from 'react-redux';
 let Draggable = require('react-draggable');
 
-import {LayoutState, Position, lockHUD, unlockHUD, savePosition} from '../../services/session/layout';
+import {LayoutState, Position, lockHUD, unlockHUD, savePosition, initializeHub} from '../../services/session/layout';
 import {HUDSessionState} from '../../services/session/reducer';
 
 import PlayerHealth from '../../widgets/PlayerHealth';
@@ -46,6 +46,10 @@ class HUD extends React.Component<HUDProps, HUDState> {
   }
   
   componentWillMount() {
+  }
+
+  componentDidMount() {
+    this.props.dispatch(initializeHub());
   }
 
   handleDrag =  (e:any, ui:any) => {

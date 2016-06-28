@@ -5,14 +5,19 @@
  */
 
 import { client } from 'camelot-unchained';
+import '../../lib/CUSignalR';
 
 const localStorageKey = 'cse_hud_layout-state';
 
-const LOCK_HUD = 'cu-ui/hud/layout/LOCK_HUD';
-const UNLOCK_HUD = 'cu-ui/hud/layout/UNLOCK_HUD';
-const SET_POSITION = 'cu-ui/hud/layout/SET_POSITION';
-const SAVE_POSITION = 'cu-ui/hud/layout/SAVE_POSITION';
-const RESET_POSITIONS = 'cu-ui/hud/layout/RESET_POSITIONS';
+const INITIALIZE_HUB = 'hud/layout/INITIALIZE_HUB';
+const HUB_INITIALIZED = 'hud/layout/HUB_INITIALIZED';
+const SAY_SOMETHING = 'hud/layout/SAY_SOMETHING';
+
+const LOCK_HUD = 'hud/layout/LOCK_HUD';
+const UNLOCK_HUD = 'hud/layout/UNLOCK_HUD';
+const SET_POSITION = 'hud/layout/SET_POSITION';
+const SAVE_POSITION = 'hud/layout/SAVE_POSITION';
+const RESET_POSITIONS = 'hud/layout/RESET_POSITIONS';
 
 export interface LayoutAction {
   type: string;
@@ -26,6 +31,8 @@ export interface Position {
   y: number;
   scale: number;
 }
+
+let hub: any = null;
 
 // sync
 export function lockHUD(): LayoutAction {
@@ -56,7 +63,45 @@ export function savePosition(name: string, pos: Position): LayoutAction {
   }
 }
 
+function initHub(): LayoutAction {
+  return {
+    type: INITIALIZE_HUB
+  }
+}
+
 // async
+export function initializeHub() {
+  return (dispatch: (action: any) => any) => {
+    dispatch(initHub());
+
+    hub = ($ as any).connection.warbandsHub;
+
+    hub.on('saySomething', (s: string) => {
+      dispatch(saySomething(s));
+    });
+
+    return ($ as any).connection.hub.start().done(() => {
+      dispatch(hubInitialized())
+    })
+
+  }
+}
+
+export function hubInitialized(): LayoutAction {
+  hub.server.saySomething('Initialized warband Hub');
+  return {
+    type: HUB_INITIALIZED
+  }
+}
+
+export function saySomething(s: string) : LayoutAction {
+  console.log(s);
+  return {
+    type: SAY_SOMETHING,
+  }
+}
+
+
 
 let defaultWidgets = () => {
   return {
@@ -89,6 +134,7 @@ let getInitialState = () => {
 
 export default function reducer(state: LayoutState = getInitialState(),
                                 action: LayoutAction = {type: null}): LayoutState {
+  console.log('running layout reducer');
   let outState = state;
   switch(action.type) {
     case LOCK_HUD:
